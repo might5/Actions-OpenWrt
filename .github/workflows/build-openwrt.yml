@@ -1,4 +1,5 @@
 #=================================================
+# https://github.com/P3TERX/Actions-OpenWrt
 # Description: Build OpenWrt using GitHub Actions
 # Lisence: MIT
 # Author: P3TERX
@@ -69,8 +70,8 @@ jobs:
         ../$DIY_SH
         make defconfig
 
-   # - name: SSH connection to Actions
-    # uses: P3TERX/debugger-action@master
+#    - name: SSH connection to Actions
+#      uses: P3TERX/debugger-action@master
 
     - name: Download package
       run: |
@@ -78,20 +79,35 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Build
+    - name: Multi-thread compile
       run: |
         cd openwrt
-        echo -e "$(nproc) thread build."
-        make -j$(nproc) V=s
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc)
 
-    - name : Upload packages
-      uses: actions/upload-artifact@master
-      with:
-        name: OpenWrt packages
-        path: openwrt/bin/packages
+    - name: Single-thread compile
+      if: failure()
+      run: |
+        cd openwrt
+        make -j1 V=s
 
-    - name : Upload targets
+    - name: Upload bin directory
       uses: actions/upload-artifact@master
+      if: always()
       with:
-        name: OpenWrt firmware
-        path: openwrt/bin/targets
+        name: OpenWrt_bin
+        path: openwrt/bin
+
+    - name: Organize files
+      if: always()
+      run: |
+        cd openwrt/bin/targets/*/*
+        rm -rf packages
+        echo "::set-env name=FIRMWARE::$(pwd)"
+
+    - name: Upload firmware
+      uses: actions/upload-artifact@master
+      if: always()
+      with:
+        name: OpenWrt_firmware
+        path: ${{ env.FIRMWARE }}

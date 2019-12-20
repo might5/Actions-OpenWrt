@@ -18,8 +18,8 @@ on:
       - '.config'
 #  schedule:
 #    - cron: 0 8 * * 5
-  watch:
-    types: [started]
+#  watch:
+#    types: [started]
 
 jobs:
   build:
@@ -98,16 +98,28 @@ jobs:
         name: OpenWrt_bin
         path: openwrt/bin
 
-    - name: Organize files
-      if: always()
-      run: |
-        cd openwrt/bin/targets/*/*
-        rm -rf packages
-        echo "::set-env name=FIRMWARE::$(pwd)"
+  #   下面注释代码是打包下载bin所以文件
+      
+  #  - name: Prepare artifact
+  #    run: find ./bin/targets/ -type d -name "packages" | xargs rm -rf {}
 
-    - name: Upload firmware
+  #  - name: Upload artifact
+  #    uses: actions/upload-artifact@master
+  #    with:
+  #      name: OpenWrt firmware
+  #      path: ./bin/targets/
+
+  #   以下代码是单独打包下载固件
+      
+    - name: Assemble artifact
+      run: |
+        rm -rf ./artifact/
+        mkdir -p ./artifact/
+        find ./bin/targets/ -name "*combined*img*" | xargs -i mv -f {} ./artifact/
+        find ./bin/targets/ -name "*sysupgrade*bin*" | xargs -i mv -f {} ./artifact/
+  
+    - name: Upload artifact
       uses: actions/upload-artifact@master
-      if: always()
       with:
-        name: OpenWrt_firmware
-        path: ${{ env.FIRMWARE }}
+        name: OpenWrt firmware
+        path: ./artifact/

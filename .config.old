@@ -133,3 +133,4 @@ CONFIG_PACKAGE_ttyd=y
 CONFIG_PACKAGE_watchcat=y
 # CONFIG_PACKAGE_zerotier is not set
 CONFIG_PACKAGE_shadowsocksr-libev-ssr-local=y
+CONFIG_PACKAGE_luci-theme-argon1=y
